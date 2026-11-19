@@ -1,0 +1,5 @@
+VirtuStream Camera - initial engineering scaffold
+
+This package contains original starter code and technical documentation.
+It does not bundle OBS, VB-CABLE, SYSVAD binaries, a camera driver, or an audio driver.
+No third-party driver is installed by this project at this stage.
