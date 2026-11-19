@@ -1,5 +1,9 @@
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <windows.h>
 #include <commctrl.h>
 #include <audioclient.h>
@@ -245,8 +249,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         break;
     case WM_MEDIA_EVENT:
         if (wp == MF_MEDIA_ENGINE_EVENT_LOADEDMETADATA) {
-            UINT32 w = g_engine ? g_engine->GetVideoWidth() : 0;
-            UINT32 h = g_engine ? g_engine->GetVideoHeight() : 0;
+            DWORD videoW = 0;
+            DWORD videoH = 0;
+            if (g_engine) {
+                // IMFMediaEngine n'a pas GetVideoWidth/GetVideoHeight : on utilise GetNativeVideoSize.
+                if (FAILED(g_engine->GetNativeVideoSize(&videoW, &videoH))) {
+                    videoW = 0;
+                    videoH = 0;
+                }
+            }
+            UINT32 w = static_cast<UINT32>(videoW);
+            UINT32 h = static_cast<UINT32>(videoH);
             wchar_t line[256]{};
             swprintf_s(line, L"Vidéo chargée : %u × %u. Prévisualisation locale uniquement ; caméra Windows en cours de développement.", w, h);
             SetStatus(line);
