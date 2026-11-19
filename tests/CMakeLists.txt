@@ -1,0 +1,6 @@
+add_executable(video_ring_test video_ring_test.cpp)
+target_include_directories(video_ring_test PRIVATE ${CMAKE_SOURCE_DIR}/shared/include)
+target_compile_features(video_ring_test PRIVATE cxx_std_17)
+find_package(Threads REQUIRED)
+target_link_libraries(video_ring_test PRIVATE Threads::Threads)
+add_test(NAME video_ring COMMAND video_ring_test)

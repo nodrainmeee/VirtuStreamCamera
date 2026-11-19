@@ -6,3 +6,6 @@ if(NOT WIN32)
 endif()
 
 add_subdirectory(app)
+
+include(CTest)
+add_subdirectory(tests)

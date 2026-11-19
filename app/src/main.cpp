@@ -9,7 +9,6 @@
 #include <audioclient.h>
 #include <shobjidl.h>
 #include <shlwapi.h>
-#include <wininet.h>
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mfmediaengine.h>
