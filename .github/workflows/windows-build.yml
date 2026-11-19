@@ -1,0 +1,85 @@
+
+name: Build VirtuStream Camera (Windows x64)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: virtustream-camera-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-preview:
+    name: Compile application preview
+    runs-on: windows-2022
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+
+      - name: Check build tools
+        shell: pwsh
+        run: |
+          cmake --version
+          msbuild -version
+
+      - name: Configure CMake
+        shell: pwsh
+        run: |
+          cmake -S . -B out/build-ci `
+            -G "Visual Studio 17 2022" -A x64
+
+      - name: Compile application
+        shell: pwsh
+        run: |
+          cmake --build out/build-ci `
+            --config Release --parallel 2
+
+      - name: Prepare package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $exe = Get-ChildItem out/build-ci `
+            -Filter VirtuStreamCamera.exe `
+            -Recurse -File |
+            Select-Object -First 1
+
+          if (-not $exe) {
+            throw "VirtuStreamCamera.exe not found"
+          }
+
+          $stage = "package/VirtuStreamCamera-preview"
+          New-Item -ItemType Directory -Force -Path $stage |
+            Out-Null
+
+          Copy-Item $exe.FullName $stage
+          Copy-Item README.md $stage
+          Copy-Item NOTICE.txt $stage
+          Copy-Item docs "$stage/docs" -Recurse
+          Copy-Item drivers "$stage/drivers" -Recurse
+
+          @'
+          VirtuStream Camera 0.1.0
+          Application preview only.
+          No Windows virtual camera driver is included.
+          No virtual microphone driver is included.
+          '@ | Set-Content "$stage/BUILD-STATUS.txt"
+
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v7
+        with:
+          name: VirtuStreamCamera-preview-win-x64
+          path: package/VirtuStreamCamera-preview/
+          if-no-files-found: error
+          retention-days: 14
